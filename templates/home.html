@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+    DJANGO DISPLAY RESTAURANTS ON MAP WITH LEAFLET JS
+{% endblock title %}
+
+{% block content %}
+    <div id="restaurantMapArea" style="height:650px; width:100%;"></div>
+    {{ restaurants|json_script:"restaurant-json" }}
+{% endblock content %}
+
+
+{% block extra_scripts %}
+    <script>
+        function createMap(center, zoom) {
+            var map = L.map('restaurantMapArea').setView(center, zoom);
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+            return map
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            let restaurantMap = createMap([7.7, -5.025], 12.5);
+            let restaurants = JSON.parse(document.getElementById("restaurant-json").textContent);
+            console.table(restaurants);
+            
+            var markerFeatureGroup = L.featureGroup().addTo(restaurantMap);
+            for (let restaurant of restaurants) {
+                L.marker([restaurant.latitude, restaurant.longitude]).addTo(markerFeatureGroup);
+            }
+        });
+    </script>
+{% endblock extra_scripts %}
