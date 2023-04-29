@@ -4,7 +4,7 @@ from restaurants.models import Restaurant
 
 def home_view(request):
     context = {
-        "restaurants": list(Restaurant.objects.values("id", "name", "longitude", "latitude"))
+        "restaurants": Restaurant.objects.filter(is_open=True)
     }
     template_name = "home.html"
     return render(request, template_name, context)

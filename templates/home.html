@@ -3,19 +3,31 @@
 {% load static %}
 
 {% block title %}
-    DJANGO DISPLAY RESTAURANTS ON MAP WITH LEAFLET JS
+    Django | Display restaurants on a map with Leaflet JS
 {% endblock title %}
 
 {% block content %}
     <div id="restaurantMapArea" style="height:650px; width:100%;"></div>
-    {{ restaurants|json_script:"restaurant-json" }}
 {% endblock content %}
 
 
 {% block extra_scripts %}
     <script>
-        function createMap(center, zoom) {
-            var map = L.map('restaurantMapArea').setView(center, zoom);
+        var restaurants_data = [
+            {% for restaurant in restaurants %}
+                {
+                    "id": parseInt("{{ forloop.counter }}"),
+                    "name": "{{ restaurant.name|safe }}",
+                    "longitude": parseFloat("{{ restaurant.longitude }}"),
+                    "latitude": parseFloat("{{ restaurant.latitude }}"),
+                    "theme_color": "{{ restaurant.theme_color }}",
+                    "status": "{{ restaurant.status }}"
+                },
+            {% endfor %}
+        ]
+        
+        function createMap() {
+            var map = L.map('restaurantMapArea').setView([7.696079, -6.5868489], 7.2);
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -24,13 +36,24 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            let restaurantMap = createMap([7.7, -5.025], 12.5);
-            let restaurants = JSON.parse(document.getElementById("restaurant-json").textContent);
-            console.table(restaurants);
-            
+            let restaurantMap = createMap();
             var markerFeatureGroup = L.featureGroup().addTo(restaurantMap);
-            for (let restaurant of restaurants) {
-                L.marker([restaurant.latitude, restaurant.longitude]).addTo(markerFeatureGroup);
+
+            for (let i in restaurants_data) {
+                var marker = L.marker([restaurants_data[i].longitude, restaurants_data[i].latitude]).addTo(markerFeatureGroup);
+                var circle = L.circle([restaurants_data[i].longitude, restaurants_data[i].latitude], {
+                    color: `${restaurants_data[i].theme_color}`,
+                    fillColor: `${restaurants_data[i].theme_color}`,
+                    fillOpacity: 0.5,
+                    radius: 100
+                }).addTo(markerFeatureGroup);
+
+                marker.bindPopup(`
+                    <strong>${restaurants_data[i].id}. ${restaurants_data[i].name}</strong> <br />
+                    <span>Lng: ${restaurants_data[i].longitude}</span><br />
+                    <span>Lng: ${restaurants_data[i].latitude}</span><br />
+                    <b>${restaurants_data[i].status}</b><br />
+                `);
             }
         });
     </script>
